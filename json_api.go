@@ -3,10 +3,9 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"github.com/anthdm/pricefetcher/types"
 	"math/rand"
 	"net/http"
-
-	"github.com/anthdm/pricefetcher/types"
 )
 
 type APIFunc func(context.Context, http.ResponseWriter, *http.Request) error
