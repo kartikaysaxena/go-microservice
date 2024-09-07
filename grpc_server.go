@@ -2,30 +2,43 @@ package main
 
 import (
 	"context"
+	"math/rand"
+	"net"
+
 	"github.com/anthdm/pricefetcher/proto"
 	"google.golang.org/grpc"
 )
 
-func makeGRPCServerAndRun(svc PriceFetcher) error {
+func makeGRPCServerAndRun(svc PriceFetcher, listenAddr string) error {
 
 	grpcPriceFetcher := NewGRPCPriceFetcherServer(svc)
 
-	opts := []grpc.ServerOption()
-	server := grpc.NewServer(opts)
+	ln, err := net.Listen("tcp", listenAddr)
+	if err != nil {
+		return err
+	}
+	server := grpc.NewServer()
+	proto.RegisterPriceFetcherServer(server, grpcPriceFetcher)
+
+	return server.Serve(ln)
 }
 
 // based on service.go
 type GRPCPriceFetcherServer struct {
 	svc PriceFetcher
+	proto.UnimplementedPriceFetcherServer
 }
 
 func NewGRPCPriceFetcherServer(svc PriceFetcher) *GRPCPriceFetcherServer {
 	return &GRPCPriceFetcherServer{
-		svc,
+		svc: svc,
 	}
 }
 
 func (s *GRPCPriceFetcherServer) FetchPrice(ctx context.Context, req *proto.PriceRequest) (*proto.PriceResponse, error) {
+
+	reqId := rand.Intn(1000)
+	ctx = context.WithValue(ctx, "requestID", reqId)
 	price, err := s.svc.FetchPrice(ctx, req.Ticker)
 	if err != nil {
 		return nil, err
