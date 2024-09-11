@@ -15,6 +15,7 @@ import (
 	server "github.com/kartikaysaxena/go-microservice/server"
 	log "github.com/sirupsen/logrus"
 	redisLib "github.com/go-redis/redis/v8"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 
@@ -121,6 +122,7 @@ func main() {
 
 	go server.MakeGRPCServerAndRun(server.NewRateModifier(&server.ModifyRateImplementation{}), *grpcAddr)
 
+	http.Handle("/metrics", promhttp.Handler())
 	http.Handle("/user/list", loggingMiddleware(http.HandlerFunc(ops.ListUsers)))
 	http.Handle("/user/create", loggingMiddleware(http.HandlerFunc(ops.CreateUser)))
 	http.Handle("/user/update", loggingMiddleware(http.HandlerFunc(ops.UpdateUser)))
